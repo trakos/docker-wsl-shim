@@ -16,7 +16,7 @@ func runDockerCommandInWsl(dockerCommand string) {
 	for i, v := range args {
 		args[i] = convertArgument(v)
 	}
-	args = append([]string{dockerCommand}, args...)
+	args = append([]string{"-d", getDefaultDistro(), dockerCommand}, args...)
 
 	cmd := exec.Command("wsl", args...)
 	cmd.Stdin = os.Stdin
@@ -34,7 +34,12 @@ func runDockerCommandInWsl(dockerCommand string) {
 	fmt.Printf("shim command failed %v", err)
 }
 
+var defaultDistro string = ""
+
 func getDefaultDistro() string {
+	if defaultDistro != "" {
+		return defaultDistro
+	}
 	reg := regexp.MustCompile(`(.*) \(Default\)`)
 
 	out, err2 := exec.Command("wsl", "-l").Output()
@@ -55,7 +60,9 @@ func getDefaultDistro() string {
 
 	rs := reg.FindStringSubmatch(output)
 
-	return rs[1]
+	defaultDistro = rs[1]
+
+	return defaultDistro
 }
 
 func decodeUTF16(b []byte) (string, error) {
